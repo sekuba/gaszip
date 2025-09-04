@@ -87,20 +87,7 @@ async function main() {
         'from',
         'to',
         'input',
-        // value and gas/fee fields
         'value',
-        'gas',
-        'gas_price',
-        'effective_gas_price',
-        'max_fee_per_gas',
-        'max_priority_fee_per_gas',
-        'gas_used',
-        // L2 fee context
-        'l1_fee',
-        'l1_gas_price',
-        'l1_gas_used',
-        'l1_fee_scalar',
-        'gas_used_for_l1',
       ],
     },
     // Use default join so we get the containing blocks (for timestamps)
@@ -119,16 +106,6 @@ async function main() {
     'input',
     'value_wei',
     'value_eth',
-    'gas_limit',
-    'gas_price',
-    'effective_gas_price',
-    'max_fee_per_gas',
-    'max_priority_fee_per_gas',
-    'gas_used',
-    'computed_fee_wei',
-    'computed_fee_eth',
-    'l1_fee_wei',
-    'l1_fee_eth',
     'decode_type',
     'prefix',
     'dest_evm',
@@ -182,7 +159,7 @@ async function main() {
         }
         const input: string = (tx as any).input || '0x'
 
-        // Value and fees
+        // Value
         const toHex = (v: any): string | undefined => (typeof v === 'string' ? v : undefined)
         const hexToBigInt = (v?: string): bigint | undefined => {
           if (!v) return undefined
@@ -190,15 +167,6 @@ async function main() {
         }
 
         const valueWei = hexToBigInt(toHex((tx as any).value))
-        const gasLimit = hexToBigInt(toHex((tx as any).gas))
-        const gasPrice = hexToBigInt(toHex((tx as any).gasPrice))
-        const effGasPrice = hexToBigInt(toHex((tx as any).effectiveGasPrice))
-        const maxFeePerGas = hexToBigInt(toHex((tx as any).maxFeePerGas))
-        const maxPrioFeePerGas = hexToBigInt(toHex((tx as any).maxPriorityFeePerGas))
-        const gasUsed = hexToBigInt(toHex((tx as any).gasUsed))
-        const l1Fee = hexToBigInt(toHex((tx as any).l1Fee))
-
-        const feeWei = gasUsed !== undefined && effGasPrice !== undefined ? gasUsed * effGasPrice : undefined
         if (valueWei !== undefined) totalValueWei += valueWei
         let decType = ''
         let prefix = ''
@@ -249,16 +217,6 @@ async function main() {
           input,
           valueWei?.toString() ?? '',
           formatEth(valueWei),
-          gasLimit?.toString() ?? '',
-          gasPrice?.toString() ?? '',
-          effGasPrice?.toString() ?? '',
-          maxFeePerGas?.toString() ?? '',
-          maxPrioFeePerGas?.toString() ?? '',
-          gasUsed?.toString() ?? '',
-          feeWei?.toString() ?? '',
-          formatEth(feeWei),
-          l1Fee?.toString() ?? '',
-          formatEth(l1Fee),
           decType,
           prefix,
           dest_evm,
