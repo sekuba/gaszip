@@ -1,8 +1,30 @@
 # Gas.zip Calldata Fetch + Decode (HyperSync)
 
-For gas.zip EOAs on EVM chains
+```
+           ________________
+          /  ___   ___   /\
+         /  /__/  /__/  /  \
+        /________________/ /|
+        |  |  |  |  |  | / |
+        |  |  |  |  |  |/  |
+        |  |  |  |  |  /|  |
+        |  |  |  |  / / |  |   <- zipper teeth opening
+        |  |  |  / / /  |  |
+        |  |  / / / /   |  |
+        |  /  / / /     |  |
+        | /  / / /      |  |
+        |/__/ /_/_______|  |
+           \\  ||  //      |
+            \\ || //       |
+             \\||//        |
+               \/          |
+               /\          |
+```
+*zipper opening* - gpt-5 medium
 
-Stream transactions from any EVM HyperSync endpoint, decode Gas.zip calldatas, and write a CSV with zip destinations.
+For decoding deposits to gas.zip EOAs on all EVM chains.
+
+Streams transactions from any EVM HyperSync endpoint, decodes Gas.zip calldatas, and writes a CSV with zip destinations.
 
 Quick start
 - `pnpm install`
