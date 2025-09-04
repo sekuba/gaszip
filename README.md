@@ -20,3 +20,5 @@ Options
 Scripts
 - `pnpm run fetch` (uses `src/fetch-gaszip.ts`)
 - `pnpm run decode -- <0xhex>` (one-off decode)
+
+for validation, all transactions on base have been saved to [base-from-block-16989497.7z](data/base-from-block-16989497.7z). Transactions: 1727807, decoded: 1727671, [errors: 6](data/base-from-block-16989497-errors.csv)
