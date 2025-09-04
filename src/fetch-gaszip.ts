@@ -80,7 +80,28 @@ async function main() {
     fieldSelection: {
       // Use snake_case names in selection; response uses camelCase fields
       block: ['number', 'timestamp'],
-      transaction: ['block_number', 'transaction_index', 'hash', 'from', 'to', 'input'],
+      transaction: [
+        'block_number',
+        'transaction_index',
+        'hash',
+        'from',
+        'to',
+        'input',
+        // value and gas/fee fields
+        'value',
+        'gas',
+        'gas_price',
+        'effective_gas_price',
+        'max_fee_per_gas',
+        'max_priority_fee_per_gas',
+        'gas_used',
+        // L2 fee context
+        'l1_fee',
+        'l1_gas_price',
+        'l1_gas_used',
+        'l1_fee_scalar',
+        'gas_used_for_l1',
+      ],
     },
     // Use default join so we get the containing blocks (for timestamps)
     joinMode: JoinMode.Default,
@@ -96,6 +117,18 @@ async function main() {
     'from',
     'to',
     'input',
+    'value_wei',
+    'value_eth',
+    'gas_limit',
+    'gas_price',
+    'effective_gas_price',
+    'max_fee_per_gas',
+    'max_priority_fee_per_gas',
+    'gas_used',
+    'computed_fee_wei',
+    'computed_fee_eth',
+    'l1_fee_wei',
+    'l1_fee_eth',
     'decode_type',
     'prefix',
     'dest_evm',
@@ -116,6 +149,15 @@ async function main() {
   let decodedErr = 0
 
   const stream = await client.stream(query, {})
+  let totalValueWei: bigint = 0n
+  const formatEth = (wei?: bigint): string => {
+    if (wei === undefined) return ''
+    const base = 10n ** 18n
+    const whole = wei / base
+    const frac = wei % base
+    const fracStr = frac.toString().padStart(18, '0').replace(/0+$/, '')
+    return fracStr ? `${whole.toString()}.${fracStr}` : whole.toString()
+  }
   for (; ;) {
     const res = await stream.recv()
     if (!res) break
@@ -133,12 +175,31 @@ async function main() {
         if (limit && total > limit) {
           outStream.end()
           console.log(
-            `Stopped early at limit=${limit}. Wrote ${OUTPUT}. Transactions: ${total - 1}, decoded: ${decodedOk}, errors: ${decodedErr}`,
+            `Stopped early at limit=${limit}. Wrote ${OUTPUT}. Transactions: ${total - 1}, decoded: ${decodedOk}, errors: ${decodedErr}, cumulative_value_eth: ${formatEth(totalValueWei)}`,
           )
           await stream.close()
           return
         }
         const input: string = (tx as any).input || '0x'
+
+        // Value and fees
+        const toHex = (v: any): string | undefined => (typeof v === 'string' ? v : undefined)
+        const hexToBigInt = (v?: string): bigint | undefined => {
+          if (!v) return undefined
+          try { return BigInt(v) } catch { return undefined }
+        }
+
+        const valueWei = hexToBigInt(toHex((tx as any).value))
+        const gasLimit = hexToBigInt(toHex((tx as any).gas))
+        const gasPrice = hexToBigInt(toHex((tx as any).gasPrice))
+        const effGasPrice = hexToBigInt(toHex((tx as any).effectiveGasPrice))
+        const maxFeePerGas = hexToBigInt(toHex((tx as any).maxFeePerGas))
+        const maxPrioFeePerGas = hexToBigInt(toHex((tx as any).maxPriorityFeePerGas))
+        const gasUsed = hexToBigInt(toHex((tx as any).gasUsed))
+        const l1Fee = hexToBigInt(toHex((tx as any).l1Fee))
+
+        const feeWei = gasUsed !== undefined && effGasPrice !== undefined ? gasUsed * effGasPrice : undefined
+        if (valueWei !== undefined) totalValueWei += valueWei
         let decType = ''
         let prefix = ''
         let dest_evm = ''
@@ -186,6 +247,18 @@ async function main() {
           (tx as any).from,
           (tx as any).to,
           input,
+          valueWei?.toString() ?? '',
+          formatEth(valueWei),
+          gasLimit?.toString() ?? '',
+          gasPrice?.toString() ?? '',
+          effGasPrice?.toString() ?? '',
+          maxFeePerGas?.toString() ?? '',
+          maxPrioFeePerGas?.toString() ?? '',
+          gasUsed?.toString() ?? '',
+          feeWei?.toString() ?? '',
+          formatEth(feeWei),
+          l1Fee?.toString() ?? '',
+          formatEth(l1Fee),
           decType,
           prefix,
           dest_evm,
@@ -214,7 +287,7 @@ async function main() {
   outStream.end()
   // eslint-disable-next-line no-console
   console.log(
-    `Done. Wrote ${OUTPUT}. Transactions: ${total}, decoded: ${decodedOk}, errors: ${decodedErr}`,
+    `Done. Wrote ${OUTPUT}. Transactions: ${total}, decoded: ${decodedOk}, errors: ${decodedErr}, cumulative_value_eth: ${formatEth(totalValueWei)}`,
   )
 }
 

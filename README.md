@@ -10,8 +10,8 @@ Quick start
 - Optionally set `HYPERSYNC_API_TOKEN`, `HYPERSYNC_URL` in `.env`.
 
 Options
-- `--url <url>` or `HYPERSYNC_URL`
-- `--api-token <token>` or `HYPERSYNC_API_TOKEN`
+- `--url <url>` or `HYPERSYNC_URL` ([supported networks](https://docs.envio.dev/docs/HyperSync/hyperrpc-supported-networks))
+- `--api-token <token>` or `HYPERSYNC_API_TOKEN` (get from [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens))
 - `--addr <address>` (required)
 - `--from <block>` (default 0), `--to <block>`
 - `--out <file>` (default `data/decoded.csv`)
@@ -21,4 +21,4 @@ Scripts
 - `pnpm run fetch` (uses `src/fetch-gaszip.ts`)
 - `pnpm run decode -- <0xhex>` (one-off decode)
 
-for validation, all transactions on base have been saved to [base-from-block-16989497.7z](data/base-from-block-16989497.7z). Transactions: 1727807, decoded: 1727671, [errors: 6](data/base-from-block-16989497-errors.csv)
+for validation, all-time deposits on base have been saved to [base-from-block-16989497.7z](data/base-from-block-16989497.7z). Transactions: 1727807, decoded: 1727671, [errors: 6](data/base-from-block-16989497-errors.csv)
