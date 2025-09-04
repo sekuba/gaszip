@@ -1,12 +1,11 @@
 /*
-  Fetch all transaction calldatas to a specific contract on Base using HyperSync,
-  decode them with gaszip decoder, and write results to CSV.
+  Fetch all transaction calldatas to a specific contract on any EVM chain via HyperSync,
+  decode them with the Gas.zip decoder, and write results to CSV.
 
-  Usage examples:
-    - HYPERSYNC_BEARER_TOKEN=... pnpm run fetch:base
-    - pnpm run fetch:base -- --from 0 --to 0           # stream full chain (to=0 means latest)
-    - pnpm run fetch:base -- --out data/decoded.csv    # custom output path
-    - pnpm run fetch:base -- --addr 0x391E7C679d29bD940d63be94AD22A25d25b5A604
+  Examples:
+    - HYPERSYNC_API_TOKEN=... HYPERSYNC_URL=https://<chain>.hypersync.xyz pnpm run fetch
+    - pnpm run fetch -- --url https://<chain>.hypersync.xyz --from 0 --out data/out.csv \
+        --addr 0x391E7C679d29bD940d63be94AD22A25d25b5A604
 */
 
 import { mkdirSync, createWriteStream, existsSync } from 'node:fs'
@@ -19,7 +18,8 @@ type CliArgs = {
   to?: number
   out?: string
   addr?: string
-  token?: string
+  url?: string
+  apiToken?: string
   limit?: number
 }
 
@@ -31,7 +31,10 @@ function parseArgs(argv: string[]): CliArgs {
     else if (a === '--to') args.to = Number(argv[++i])
     else if (a === '--out') args.out = argv[++i]
     else if (a === '--addr') args.addr = argv[++i]
-    else if (a === '--token') args.token = argv[++i]
+    else if (a === '--url') args.url = argv[++i]
+    else if (a === '--api-token') args.apiToken = argv[++i]
+    // Backwards compat aliases
+    else if (a === '--token') (args as any).apiToken = argv[++i]
     else if (a === '--limit') args.limit = Number(argv[++i])
   }
   return args
@@ -51,16 +54,19 @@ function ensureDir(path: string) {
 }
 
 async function main() {
-  const { from, to, out, addr, token, limit } = parseArgs(process.argv.slice(2))
+  const { from, to, out, addr, url, apiToken, limit } = parseArgs(process.argv.slice(2))
 
   const CONTRACT = (addr || '0x391E7C679d29bD940d63be94AD22A25d25b5A604').toLowerCase()
-  const OUTPUT = out || 'data/decoded-base.csv'
+  const OUTPUT = out || 'data/decoded.csv'
   const FROM_BLOCK = Number.isFinite(from) ? (from as number) : 0
   const TO_BLOCK = Number.isFinite(to) ? (to as number) : undefined
 
+  const URL = url || process.env.HYPERSYNC_URL
+  if (!URL) throw new Error('Missing HyperSync URL. Provide --url or HYPERSYNC_URL env var')
+
   const client = HypersyncClient.new({
-    url: 'https://base.hypersync.xyz',
-    bearerToken: token || process.env.HYPERSYNC_BEARER_TOKEN,
+    url: URL,
+    bearerToken: apiToken || process.env.HYPERSYNC_API_TOKEN,
   })
 
   const query: Query = {
@@ -110,7 +116,7 @@ async function main() {
   let decodedErr = 0
 
   const stream = await client.stream(query, {})
-  for (;;) {
+  for (; ;) {
     const res = await stream.recv()
     if (!res) break
 
@@ -201,7 +207,7 @@ async function main() {
 
     if (res.nextBlock) {
       // advance starting block for subsequent pages
-      ;(query as any).fromBlock = res.nextBlock
+      ; (query as any).fromBlock = res.nextBlock
     }
   }
 

@@ -5,7 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "decode": "ts-node src/gaszip-decode.ts",
-    "fetch:base": "ts-node src/fetch-gaszip-base.ts"
+    "fetch": "ts-node src/fetch-gaszip.ts"
   },
   "keywords": [],
   "author": "",
@@ -13,12 +13,17 @@
   "description": "",
   "type": "commonjs",
   "dependencies": {
-    "@types/node": "^24.3.1",
     "@envio-dev/hypersync-client": "^0.3.0",
     "base-x": "^5.0.1",
     "bech32": "^2.0.0",
-    "bs58": "^6.0.0",
+    "bs58": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
